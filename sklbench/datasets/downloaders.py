@@ -22,6 +22,7 @@ import pandas as pd
 import requests
 from scipy.sparse import csr_matrix
 from sklearn.datasets import fetch_openml
+from sklearn.datasets._base import RemoteFileMetadata, fetch_file
 
 
 def retrieve(url: str, filename: str) -> None:
@@ -83,8 +84,14 @@ def load_openml(
     return x, y
 
 
-def download_and_read_csv(url: str, raw_data_cache_dir: str, **reading_kwargs):
-    local_path = os.path.join(raw_data_cache_dir, os.path.basename(url))
-    retrieve(url, local_path)
-    data = pd.read_csv(local_path, **reading_kwargs)
+def download_and_read_csv(
+    file_meta: RemoteFileMetadata, raw_data_cache_dir: str, **reading_kwargs
+):
+    archive_path = fetch_file(
+        url=file_meta.url,
+        folder=raw_data_cache_dir,
+        local_filename=file_meta.filename,
+        sha256=file_meta.checksum,
+    )
+    data = pd.read_csv(archive_path, **reading_kwargs)
     return data
